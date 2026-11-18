@@ -71,7 +71,9 @@ def main(browser):
     for p in (a,b):
         assert run(p,'return f.stock()[0].qty')==105
         assert run(p,'return f.tx().length')==3
-    assert run(a,'return s.accountBalances()')==run(b,'return s.accountBalances()')
+    balances=run(a,'return s.accountBalances()')
+    assert balances==run(b,'return s.accountBalances()')
+    assert balances=={'cash':250,'posCash':0,'posElectronic':0,'debt':0,'payable':0}
     assert apply(b,ua)['newEvents']==0
     print('PASS offline sales, receipt, ledger convergence and duplicate delivery',flush=True)
     for p in (a,b):
