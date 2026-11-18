@@ -161,10 +161,9 @@ def main(browser):
     c.locator('#syncConfirmMerge').click()
     c.wait_for_function("document.querySelector('#syncMessage').textContent.includes('Merge saved')")
     assert run(c,'return f.supplierBalance()')==75
-    c.locator('[data-view="Home"]').click()
-    c.locator('#syncSend').click()
+    c.locator('[data-view="Sync"]').click()
     with c.expect_download():
-        c.locator('#syncExportUpdates').click()
+        c.locator('#syncSend').click()
     print('PASS receive file picker, review, commit and send download',flush=True)
 
     for p in (a,b):
@@ -194,7 +193,7 @@ def pairing_ui(browser):
     for p in devices:
         p.set_viewport_size({'width':390,'height':844})
         run(p,'s.open()')
-        p.locator('[data-view="Devices"]').click()
+        p.locator('[data-view="New Device"]').click()
         p.locator('#syncConnect summary').click()
         backup=download(p,'#syncRecoveryDownload')
         p.wait_for_function("document.querySelector('#syncMessage').textContent.includes('Select that file')")
@@ -202,7 +201,7 @@ def pairing_ui(browser):
         p.wait_for_function("document.querySelector('#syncRecoveryStatus').textContent.includes('verified ·')")
         invitations.append(download(p,'#syncExportOffer'))
     for p,other in zip(devices,reversed(invitations)):
-        p.locator('[data-view="Receive"]').click()
+        p.locator('#syncReceiveOffer').click()
         upload(p,'#syncImportFile',other)
         p.locator('#syncFingerprintChecked').check()
         p.locator('#syncTrustDevice').click()
@@ -212,7 +211,7 @@ def pairing_ui(browser):
         p.locator('#syncSnapshotScope').check()
     a,b=devices
     connection=download(a,'#syncApproveInitial')
-    b.locator('[data-view="Receive"]').click();upload(b,'#syncImportFile',connection)
+    b.locator('#syncOpenCheckpoint').click();upload(b,'#syncImportFile',connection)
     b.locator('#syncAcceptCheckpoint').click()
     b.wait_for_function("RoseachySmartSync.status().checkpointId!==null")
     assert run(a,'return s.status().checkpointId')==run(b,'return s.status().checkpointId')
