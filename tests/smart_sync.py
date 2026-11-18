@@ -31,6 +31,7 @@ def device(browser, version=None):
     p=ctx.new_page()
     p.goto(URL)
     p.wait_for_selector('#openSmartSyncSettings',state='attached',timeout=20000)
+    assert p.evaluate("RoseachyStore.status().mode") == 'indexeddb'
     return p
 def run(p, expr, arg=None):
     return p.evaluate('async arg=>{const s=RoseachySmartSync,f=fixture;'+expr+'}',arg)
@@ -137,6 +138,11 @@ def main(browser):
     reject(lambda:apply(c,late),'Missing')
     apply(c,updates(a));apply(b,updates(c));apply(a,updates(b))
     for p in (a,b,c):assert run(p,'return f.stock()[0].price')==38
+    exchange=run(a,'return s.known()')
+    for p in (b,c):assert run(p,'return s.known()')==exchange
+    for sender,recipient in [(a,b),(b,c),(c,a)]:
+        assert apply(recipient,updates(sender))['newEvents']==0
+        assert run(recipient,'return s.status().lastConfirmed.digest')==exchange['digest']
     print('PASS out-of-order rejection, missing-event recovery and repeated cycles',flush=True)
     assert run(a,'return f.supplierInvoice()')
     apply(b,updates(a))
@@ -160,6 +166,57 @@ def main(browser):
     with c.expect_download():
         c.locator('#syncExportUpdates').click()
     print('PASS receive file picker, review, commit and send download',flush=True)
+
+    for p in (a,b):
+        run(p,"await f.credit.pay({customerId:arg,amount:3})",customer)
+    payfile=updates(a)
+    plan=run(b,'return s.planUpdates(await s.unprotect(arg))',payfile)
+    similar=[c for c in plan['conflicts'] if c['type']=='similar-payments']
+    assert len(similar)==1
+    reject(lambda:apply(b,payfile),'Resolve')
+    run(b,'return s.merge(await s.unprotect(arg[0]),arg[1])',[payfile,{similar[0]['key']:'separate'}])
+    apply(a,updates(b))
+    assert run(a,'return f.credit.balance(arg)',customer)==50+price-26
+    print('PASS matching payments require an explicit receipt decision',flush=True)
+    d=device(browser);run(d,'await f.seed()');nonempty=offer(d);trust(a,nonempty)
+    reject(lambda:run(a,"return s.join(await s.unprotect(arg),{sameBusiness:true,approvedBy:'Tester'})",nonempty),'independent business records')
+    assert run(d,'return f.stock()[0].qty')==100
+    print('PASS enrollment stops for an independent nonempty third store',flush=True)
+
+def pairing_ui(browser):
+    devices=[device(browser) for _ in range(2)]
+    def upload(p,selector,value):
+        p.locator(selector).set_input_files({'name':'roseachy.json','mimeType':'application/json','buffer':json.dumps(value).encode()})
+    def download(p,selector):
+        with p.expect_download() as result:p.locator(selector).click()
+        return json.loads(result.value.path().read_text())
+    invitations=[]
+    for p in devices:
+        p.set_viewport_size({'width':390,'height':844})
+        run(p,'s.open()')
+        p.locator('[data-view="Devices"]').click()
+        p.locator('#syncConnect summary').click()
+        backup=download(p,'#syncRecoveryDownload')
+        p.wait_for_function("document.querySelector('#syncMessage').textContent.includes('Select that file')")
+        upload(p,'#syncRecoveryFile',backup)
+        p.wait_for_function("document.querySelector('#syncRecoveryStatus').textContent.includes('verified ·')")
+        invitations.append(download(p,'#syncExportOffer'))
+    for p,other in zip(devices,reversed(invitations)):
+        p.locator('[data-view="Receive"]').click()
+        upload(p,'#syncImportFile',other)
+        p.locator('#syncFingerprintChecked').check()
+        p.locator('#syncTrustDevice').click()
+        p.locator('#syncApproveInitial').wait_for()
+        p.locator('#syncSameBusiness').check()
+        p.locator('#syncApprover').fill('Operator')
+        p.locator('#syncSnapshotScope').check()
+    a,b=devices
+    connection=download(a,'#syncApproveInitial')
+    b.locator('[data-view="Receive"]').click();upload(b,'#syncImportFile',connection)
+    b.locator('#syncAcceptCheckpoint').click()
+    b.wait_for_function("RoseachySmartSync.status().checkpointId!==null")
+    assert run(a,'return s.status().checkpointId')==run(b,'return s.status().checkpointId')
+    print('PASS mobile guided pairing with actual downloaded backups and invitations',flush=True)
 
 def upgrade(browser):
     old=subprocess.check_output(['git','show','49f88a5:index.html'],cwd=SOURCE.parent,text=True)
@@ -185,3 +242,4 @@ if __name__=='__main__':
         br=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
         main(br)
         upgrade(br)
+        pairing_ui(br)
