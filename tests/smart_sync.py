@@ -10,7 +10,7 @@ source = SOURCE.read_text()
 marker = 'window.RoseachySmartSync=api;'
 assert source.count(marker) == 1
 source = source.replace(marker, '''window.fixture={
- backup:roseachySafeBackup,trust:SyncPrivacy.trust,stock:getStock,tx:()=>tx,
+ credit:CreditAccounts,backup:roseachySafeBackup,trust:SyncPrivacy.trust,stock:getStock,tx:()=>tx,
  seed:()=>RS.atomic(()=>setStock([{id:'soap',name:'Soap',qty:100,price:10,currentCostPrice:3,costPrice:3,division:'pharmacy',batches:[{id:'lot',qty:100,costPrice:3,createdAt:'2026-01-01T00:00:00.000Z'}]}])),
  price:v=>inventoryCommit(()=>{const p=clone(getStock());p[0].price=v;setStock(p);return true}),
  activity:(type,qty)=>inventoryCommit(()=>{const t={id:uid('tx'),type,domain:'retail',refKind:'product',productId:'soap',productName:'Soap',qty,unitPrice:10,amount:10*qty,costSnapshot:3,ts:Date.now(),division:'pharmacy',paymentFunding:type==='purchase_cash'?'external':'business'};if(!applyEffect(t,false,true))throw Error('Stock movement failed');tx.push(t);return true},'Sales Desk')
@@ -79,6 +79,53 @@ def main(browser):
     apply(a,updates(b))
     assert run(a,'return f.stock()[0].price')==run(b,'return f.stock()[0].price')
     print('PASS competing product prices and shared decision',flush=True)
+    oc=offer(c);trust(a,oc);trust(b,oc);trust(c,oa);trust(c,ob)
+    joined=run(a,"return s.join(await s.unprotect(arg),{sameBusiness:true,approvedBy:'Operator'})",oc)
+    enrollment=run(a,'return s.checkpointPackage(arg)',joined)
+    run(c,'return s.acceptCheckpoint((await s.unprotect(arg)).checkpoint,'+approval+')',enrollment)
+    run(b,'return s.acceptJoin((await s.unprotect(arg)).checkpoint,'+approval+')',enrollment)
+    apply(c,updates(b))
+    assert run(c,'return f.stock()[0].qty')==105
+    assert run(c,'return f.activity("sale_cash",2)')
+    apply(b,updates(c));apply(a,updates(b))
+    for p in (a,b,c):assert run(p,'return f.stock()[0].qty')==103
+    print('PASS three devices forward signed events in both directions',flush=True)
+    customer=run(a,"return f.credit.create({name:'Test account',startingBalance:50,startingConfirmed:true})")
+    apply(b,updates(a))
+    run(a,"return f.credit.purchase({customerId:arg,lines:[{productId:'soap',qty:1}]})",customer)
+    run(b,"return f.credit.pay({customerId:arg,amount:20})",customer)
+    ua,ub=updates(a),updates(b);apply(a,ub);apply(b,ua)
+    price=run(a,'return f.stock()[0].price')
+    for p in (a,b):
+        assert run(p,'return f.credit.balance(arg)',customer)==50+price-20
+    print('PASS concurrent credit purchase and repayment',flush=True)
+    before=run(c,'return [f.stock(),f.tx(),await s.known()]')
+    package=updates(a)
+    # Abort the actual IndexedDB transaction after it starts writing.
+    c.evaluate("""()=>{let attempts=0;const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){
+      const req=put.apply(this,args);if(this.transaction.objectStoreNames.contains('syncEventRecords')){
+       if(++attempts===2)IDBObjectStore.prototype.put=put;this.transaction.abort();}return req;}}""")
+    try:apply(c,package)
+    except Exception:pass
+    else:raise AssertionError('Expected aborted merge')
+    assert before==run(c,'return [f.stock(),f.tx(),await s.known()]')
+    c.reload();c.wait_for_selector('#openSmartSyncSettings',state='attached')
+    assert before==run(c,'return [f.stock(),f.tx(),await s.known()]')
+    apply(c,package)
+    print('PASS transaction abort, reload, and retry',flush=True)
+    for p in (a,b):assert run(p,'return f.activity("sale_cash",70)')
+    ua,ub=updates(a),updates(b);apply(a,ub);apply(b,ua)
+    for p in (a,b):
+        assert run(p,'return f.stock()[0].syncBalance')==-38
+        assert run(p,'return s.status().shortages[0].missing')==38
+    print('PASS shortage retains both sales and flags 38 missing units',flush=True)
+    ahead=run(a,"return f.price(37)");assert ahead
+    assert run(a,"return f.price(38)")
+    late=run(a,"const p=(await s.updates()).payload;return s.protect({...p,events:p.events.filter(e=>e.deviceId===s.identity().deviceId).slice(-1)})")
+    reject(lambda:apply(c,late),'Missing')
+    apply(c,updates(a));apply(b,updates(c));apply(a,updates(b))
+    for p in (a,b,c):assert run(p,'return f.stock()[0].price')==38
+    print('PASS out-of-order rejection, missing-event recovery and repeated cycles',flush=True)
 if __name__=='__main__':
     with sync_playwright() as pw:
         br=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
