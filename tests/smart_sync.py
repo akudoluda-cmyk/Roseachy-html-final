@@ -2,6 +2,8 @@
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 import shutil
+import json
+import subprocess
 
 SOURCE = Path(__file__).resolve().parents[1] / 'index.html'
 URL = 'http://localhost:9831/'
@@ -9,15 +11,23 @@ source = SOURCE.read_text()
 # Expose fixture builders inside the closure only in the test response.
 marker = 'window.RoseachySmartSync=api;'
 assert source.count(marker) == 1
-source = source.replace(marker, '''window.fixture={
- credit:CreditAccounts,backup:roseachySafeBackup,trust:SyncPrivacy.trust,stock:getStock,tx:()=>tx,
+fixtures = '''window.fixture={
+ credit:CreditAccounts,supplierBalance:()=>supplierDebtModel(true).totalK/100,
+ supplierInvoice:()=>inventoryCommit(()=>{
+   const m=getMarketState(),ts=nowIso();m.suppliers.push({id:'test-supplier',name:'Supply Co',createdAt:ts});
+   const t={id:'invoice-line',type:'purchase_credit',domain:'retail',refKind:'product',productId:'soap',productName:'Soap',qty:50,amount:100,unitPrice:2,ts,
+    supplierId:'test-supplier',marketGroupPurchaseId:'invoice',supplierPurchaseId:'invoice',marketPurchaseId:'item'};
+   m.marketPurchases.push({id:'invoice',supplierId:t.supplierId,total:100,items:[{productId:'soap',marketPurchaseId:'item',txId:t.id,qty:50,total:100}],payments:[],completedAt:ts});
+   setMarketState(m);if(!applyEffect(t,false,true))throw Error('Purchase movement failed');tx.push(t);return true;
+ },'Market Desk'),openPayment:()=>openSupplierPayment('invoice'),backup:roseachySafeBackup,trust:SyncPrivacy.trust,stock:getStock,tx:()=>tx,
  seed:()=>RS.atomic(()=>setStock([{id:'soap',name:'Soap',qty:100,price:10,currentCostPrice:3,costPrice:3,division:'pharmacy',batches:[{id:'lot',qty:100,costPrice:3,createdAt:'2026-01-01T00:00:00.000Z'}]}])),
  price:v=>inventoryCommit(()=>{const p=clone(getStock());p[0].price=v;setStock(p);return true}),
  activity:(type,qty)=>inventoryCommit(()=>{const t={id:uid('tx'),type,domain:'retail',refKind:'product',productId:'soap',productName:'Soap',qty,unitPrice:10,amount:10*qty,costSnapshot:3,ts:Date.now(),division:'pharmacy',paymentFunding:type==='purchase_cash'?'external':'business'};if(!applyEffect(t,false,true))throw Error('Stock movement failed');tx.push(t);return true},'Sales Desk')
-};'''+marker)
-def device(browser):
+};'''
+source=source.replace(marker,fixtures+marker)
+def device(browser, version=None):
     ctx=browser.new_context()
-    ctx.route(URL,lambda r:r.fulfill(content_type='text/html',body=source))
+    ctx.route(URL,lambda r:r.fulfill(content_type='text/html',body=version or source))
     p=ctx.new_page()
     p.goto(URL)
     p.wait_for_selector('#openSmartSyncSettings',state='attached',timeout=20000)
@@ -126,7 +136,50 @@ def main(browser):
     apply(c,updates(a));apply(b,updates(c));apply(a,updates(b))
     for p in (a,b,c):assert run(p,'return f.stock()[0].price')==38
     print('PASS out-of-order rejection, missing-event recovery and repeated cycles',flush=True)
+    assert run(a,'return f.supplierInvoice()')
+    apply(b,updates(a))
+    assert run(b,'return f.supplierBalance()')==100
+    run(b,'f.openPayment()')
+    b.locator('#supplierPaymentAmount').fill('25')
+    b.locator('#supplierPaymentSave').click()
+    b.wait_for_function('fixture.supplierBalance()===75')
+    apply(a,updates(b));apply(a,updates(b))
+    assert run(a,'return f.supplierBalance()')==75
+    assert run(a,"return f.tx().filter(t=>t.supplierPaymentId).length")==1
+    print('PASS supplier credit purchase, payment form, outstanding balance and replay',flush=True)
+    run(c,'s.open()')
+    c.locator('#syncReceive').click()
+    c.locator('#syncImportFile').set_input_files({'name':'update.json','mimeType':'application/json','buffer':json.dumps(updates(a)).encode()})
+    c.locator('#syncConfirmMerge').click()
+    c.wait_for_function("document.querySelector('#syncMessage').textContent.includes('Merge saved')")
+    assert run(c,'return f.supplierBalance()')==75
+    c.locator('[data-view="Home"]').click()
+    c.locator('#syncSend').click()
+    with c.expect_download():
+        c.locator('#syncExportUpdates').click()
+    print('PASS receive file picker, review, commit and send download',flush=True)
+
+def upgrade(browser):
+    old=subprocess.check_output(['git','show','49f88a5:index.html'],cwd=SOURCE.parent,text=True)
+    old=old.replace(marker,fixtures+marker)
+    a,b=[device(browser,old) for _ in range(2)]
+    for p in (a,b):run(p,'await f.seed()')
+    oa,ob=offer(a),offer(b)
+    trust(a,ob);trust(b,oa)
+    cp=run(a,"return s.createCheckpoint(await s.unprotect(arg),{approvedBy:'Operator',sameBusiness:true,snapshotScope:true})",ob)
+    for p in (a,b):run(p,"return s.acceptCheckpoint(arg,{approvedBy:'Operator',sameBusiness:true})",cp)
+    assert run(a,'return f.activity("sale_cash",2)')
+    for p in (a,b):
+        ident=run(p,'return s.identity().deviceId')
+        p.context.unroute(URL);p.context.route(URL,lambda r:r.fulfill(content_type='text/html',body=source))
+        p.reload();p.wait_for_selector('#openSmartSyncSettings',state='attached')
+        assert run(p,'return s.identity().deviceId')==ident
+        assert run(p,'return s.status().checkpointId')==cp['id']
+    apply(b,updates(a))
+    assert run(b,'return [f.stock()[0].qty,f.tx().length]')==[98,1]
+    print('PASS in-place upgrade from the original paired 2.17.2 databases',flush=True)
 if __name__=='__main__':
     with sync_playwright() as pw:
         br=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
         main(br)
+        upgrade(br)
