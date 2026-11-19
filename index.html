@@ -353,7 +353,6 @@ textarea{min-height:96px}
 button{position:relative;overflow:hidden;isolation:isolate;min-height:44px;padding:0 21px;border-radius:999px;transition:transform .14s var(--ease-premium),box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease,opacity .2s ease}
 button::after{content:"";position:absolute;z-index:2;pointer-events:none;top:-35%;bottom:-35%;left:-42%;width:24%;background:rgba(255,255,255,.26);transform:skewX(-20deg) translateX(-180%);opacity:0}
 button:active:not(:disabled){transform:scale(.965)}
-button:active:not(:disabled)::after{animation:roseachyGlint .42s ease-out}
 @keyframes roseachyGlint{0%{opacity:0;transform:skewX(-20deg) translateX(-180%)}18%{opacity:.9}100%{opacity:0;transform:skewX(-20deg) translateX(780%)}}
 button.primary{box-shadow:0 8px 20px -12px rgba(18,55,42,.58)}
 button.primary:hover{box-shadow:0 11px 24px -14px rgba(18,55,42,.62)}
@@ -667,7 +666,6 @@ input[type=checkbox]{border-radius:6px}
 /* Buttons: medium radius, tactile press, brief flash (flat, no gradient) */
 button{border-radius:var(--r-md);min-height:46px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:transform .16s var(--press),background .16s ease,border-color .16s ease,color .16s ease,box-shadow .2s ease}
 button::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.16);opacity:0;pointer-events:none;transition:opacity .38s ease}
-button:active:not(:disabled)::after{opacity:1;transition-duration:0s}
 button:active:not(:disabled){transform:scale(.972)}
 button.ghost:active::after,button:not(.primary):not(.danger):active::after{background:rgba(18,55,42,.06)}
 button.primary{box-shadow:0 1px 2px rgba(18,55,42,.2),0 8px 18px -10px rgba(18,55,42,.55)}
@@ -796,7 +794,7 @@ label{font-size:var(--rs-label-size)!important} th,td,.marketRow,.stockRow{font-
 .deskMenu,.marketPanel,.dupModal{border-radius:var(--rs-radius-lg)}
 .marketSection,.metric,.tablewrap{border-radius:var(--rs-radius-md)}
 .tabInd{transition-duration:calc(.1s * var(--rs-motion-mult))!important;transition-timing-function:var(--rs-ease-user)!important}
-html.rs-no-button-glint button.rsGlint::after,html.rs-no-tab-glint .tabInd.rsTabGlint::after{animation:none!important;opacity:0}
+html.rs-no-tab-glint .tabInd.rsTabGlint::after{animation:none!important;opacity:0}
 html.rs-no-squash button:active{transform:none!important}
 html.rs-no-fluid-tabs .tabInd{transition:none!important}
 html.rs-flat .card,html.rs-flat .marketPanel,html.rs-flat .metric,html.rs-flat .deskMenu{box-shadow:none}
@@ -1095,20 +1093,12 @@ button::after{
   transform:skewX(-18deg) translateX(-180%);
   opacity:0;
 }
-button.rsGlint::after{animation:rsPremiumGlint .46s cubic-bezier(.2,.72,.22,1) both}
-@keyframes rsPremiumGlint{
-  0%{opacity:0;transform:skewX(-18deg) translateX(-180%)}
-  16%{opacity:.78}
-  72%{opacity:.34}
-  100%{opacity:0;transform:skewX(-18deg) translateX(820%)}
-}
 
 @media(max-width:700px){
   .card,.collapse,.marketSection{border-radius:20px}
   input,select,textarea{border-radius:14px}
   .tabs,.seg,.marketViewTabs,.marketCalcTabs{border-radius:18px}
 }
-@media(prefers-reduced-motion:reduce){button.rsGlint::after{animation:none}}
 
 /* Roseachy v2.1.2 — verified premium visual layer */
 :root{
@@ -1165,13 +1155,6 @@ button::after{
   transform:skewX(-18deg) translateX(-220%);
   opacity:0;
   filter:blur(.2px);
-}
-button.rsGlint::after{animation:rsPremiumGlint212 .52s cubic-bezier(.18,.75,.22,1) both}
-@keyframes rsPremiumGlint212{
-  0%{opacity:0;transform:skewX(-18deg) translateX(-220%)}
-  12%{opacity:.85}
-  62%{opacity:.52}
-  100%{opacity:0;transform:skewX(-18deg) translateX(760%)}
 }
 
 @media(max-width:700px){
@@ -3278,9 +3261,42 @@ html{scrollbar-gutter:stable}
     font-size:var(--rs-button-text-size)!important;font-weight:600;letter-spacing:.01em;line-height:1.3!important;
     text-align:center;white-space:normal;
     transition:background-color var(--m3-dur) var(--m3-ease),box-shadow var(--m3-dur) var(--m3-ease),border-color var(--m3-dur) var(--m3-ease),color var(--m3-dur) var(--m3-ease)}
-  button:not(:disabled):active{transition-duration:60ms}
+  button:not(:disabled):active{transition-duration:60ms;transform:none!important}
+  .rsButtonSheen {
+    position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+    background:linear-gradient(110deg,transparent 42%,color-mix(in srgb,currentColor 25%,transparent) 48%,rgb(255 255 255 / .66) 50%,transparent 58%) 100% 0 / 300% 100% no-repeat;
+  }
+  html:is(.rs-no-button-glint,.rs-reduce-motion,.rs-animations-off) .rsButtonSheen{display:none!important}
+  html:is(.rs-no-squash,.rs-reduce-motion,.rs-animations-off) button{scale:none!important}
+  @media(prefers-reduced-motion:reduce){.rsButtonSheen{display:none!important}button{scale:none!important}}
   .iconbtn,.iconClose,.rowToggle{font-size:var(--m3-text-secondary)!important;font-weight:600}
   .iconbtn svg,.iconClose svg,.deskMenuBtn svg,.marketMoreBtn svg,button svg{width:var(--m3-icon-md);height:var(--m3-icon-md);flex:none}
+
+  #moveCashBtn {
+    min-height:44px!important;
+    padding:8px max(14px,var(--m3-space-3))!important;
+    color:var(--accent-text);
+  }
+  .collapseHead>span:first-child,.settingsGroup>summary,.card .help {
+    overflow-wrap:break-word;
+    text-wrap:pretty;
+  }
+  .footerActions button:is(.primary,.ghost),#adjApplyBtn {
+    max-width:100%;
+    min-height:max(44px,var(--rs-button-h))!important;
+    height:auto!important;
+    padding-block:max(8px,var(--rs-small-pad-y))!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere;
+    text-wrap:balance;
+  }
+  @media(max-width:520px){
+    #stockAdjBody .stockAdjustmentGrid>div:last-child {grid-column:1/-1!important}
+    #stockAdjBody .stockAdjustmentGrid>#adjBatchField {grid-column:1/-1!important}
+  }
+  @media(max-width:380px){
+    #stockAdjBody .stockAdjustmentGrid {grid-template-columns:minmax(0,1fr)!important}
+  }
 
   /* ---------- navigation ---------- */
   #rsMainTabs>.tabBtn{gap:4px;padding:6px 2px!important}
@@ -3401,13 +3417,21 @@ html{scrollbar-gutter:stable}
 </style>
 
 <style id="roseachy-portable-safety-css">
-#rsPortableSafety{font:600 12px/1.5 Inter,system-ui,-apple-system,sans-serif;background:var(--card,#fff);color:var(--text,#123);border:1px solid var(--line,#ccd);border-radius:12px;padding:10px 12px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;max-width:1320px;margin:6px auto 0;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-#rsPortableSafety button{font:inherit;white-space:nowrap;cursor:pointer;padding:7px 12px;border-radius:9px;background:var(--accent,#245c46);color:#fff;border:none;min-height:36px}
-#rsPortableSafety button:focus-visible{outline:3px solid currentColor;outline-offset:2px}
-#rsPortableSafety[hidden]{display:none!important}
-#rsPortableSafety .rsPortableText{flex:1;min-width:205px}
-@media print{#rsPortableSafety{display:none!important}}
-@media(max-width:620px){#rsPortableSafety{margin:7px 12px 0;font-size:11px;padding:8px;gap:6px}#rsPortableSafety button{padding:6px 9px;min-height:36px}}
+#rsPortableSafety {
+  box-sizing:border-box;
+  width:calc(100% - 2 * var(--rs-page-pad,16px));
+  max-width:1320px;
+  margin:8px auto 0;
+  padding:9px max(16px,var(--rs-page-pad,16px));
+  border:1px solid var(--border-subtle);
+  border-radius:var(--rs-radius-md);
+  background:var(--surface-primary);
+  color:var(--text-muted);
+  font:500 max(.8125rem,var(--m3-text-meta))/1.5 var(--rs-body-font,system-ui);
+  overflow-wrap:anywhere;
+}
+#rsPortableSafety[data-level="warning"] {color:var(--text-primary);border-inline-start:3px solid var(--status-danger)}
+@media print {#rsPortableSafety{display:none!important}}
 </style>
 <style id="smart-sync-appearance">
 @layer roseachyPrecision {
@@ -3473,10 +3497,7 @@ html{scrollbar-gutter:stable}
 </style>
 </head>
 <body spellcheck="false">
-<div id="rsPortableSafety" class="noPrint" role="status" aria-live="polite">
- <div class="rsPortableText" id="rsPortableText">Portable HTML · This browser stores records locally. Always export and keep a verified Full Backup after each work shift. Use the same browser and file location.</div>
- <button type="button" id="rsPortableBackup" title="Export the app's existing verified full JSON backup">Export Full Backup</button>
-</div>
+<div id="rsPortableSafety" class="noPrint" role="status" aria-live="polite">Opening local records…</div>
 
 <div id="bootSplash" class="bootSplash" aria-hidden="true"><div class="bootLockup"><svg class="bootLogo" viewBox="0 0 960.98 954.66" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="M143.33 369.55l-40.7-45.22a8.56 8.56 0 0 1-1.72-7.9l14.63-56c17.84-68.33 57.75-109 113.81-121.65 115-26 159.84 88.29 175.42 137.42 2.41 7.6 13.28 8 17.78.65 27.19-44.55 113.61-150.08 228.35-162 86.14-9 136.32 14.89 157.25 28.64 6.92 4.54 8.28 13.17 3.18 20.46l-68.73 79.37c-5.39 7.7-16.46 10.85-24.8 7-42.48-19.6-110.66-26.74-173.61 18.84-63.46 46.43-122.75 133.38-148.47 174.21-4.71 7.48-16.18 5.35-17.49-3.19-10.75-70.15-47.19-254.69-130.24-245.86-105.6 11.22-105.58 123.94-98.52 172.08.49 3.3-3.3 5.5-5.42 3.15Z"/><path d="M957.33 597.12l-67.84 88.61c-6.49 7.59-19.63 8.6-28.63 2.25l-109.48-64.14c-5.54-3.91-13.52-3.24-17.63 1.45L471.94 951.64c-3.82 4.61-11.75 3.82-16.11-1.56L100.34 472.58c-4-4.93-11.4-3.08-13.14 3.24l-31.12 89.94a11.29 11.29 0 0 1-13.81 6.55l-40.87-7.1a2 2 0 0 1 .68-3.86c12.07.68 28.71-3.79 36.82-3.21a5.61 5.61 0 0 0 5.89-4.4l31.76-142.8c1.6-6.13 8.48-8.45 12.55-4.22l362.81 397c4.73 4.92 12.67 4.62 16-.63l248.73-353.43c3.72-5.16 11.56-6.72 17.24-3.4L952 573.53c9.44 5.47 11.81 16.01 5.33 23.59Z"/><circle cx="437.82" cy="54.74" r="54.74"/></g></svg><span class="bootName">Roseachy</span></div></div>
 <div class="app">
@@ -3492,11 +3513,11 @@ html{scrollbar-gutter:stable}
 
   <div id="tabTx">
     <div class="collapse">
-      <button type="button" class="collapseHead noPrint" data-target="daySetupBody" aria-expanded="true"><span>Day setup — business, date &amp; opening balances</span><span class="chev">⌄</span></button>
+      <button type="button" class="collapseHead noPrint" data-target="daySetupBody" aria-expanded="true"><span>Day setup</span><span class="chev">⌄</span></button>
       <div class="collapseBody open" id="daySetupBody"><div class="collapseInner">
         <div class="row daySetupGrid">
           <input spellcheck="false" id="business" type="hidden" value="Roseachy"><div><label>Date</label><input spellcheck="false" id="date" type="date"></div>
-          <div><label>Retail opening cash</label><input spellcheck="false" id="openingCash" type="number" min="0" step="0.01" placeholder="Enter opening retail cash"><div id="openingCashHint" class="small openingCashHint" aria-live="polite"></div></div><div><label>POS opening cash</label><input spellcheck="false" id="posOpeningCash" type="number" min="0" step="0.01" placeholder="Enter opening POS cash"><div id="posOpeningCashHint" class="small openingCashHint" aria-live="polite"></div></div><div><label>Opening POS electronic balance</label><input spellcheck="false" id="posOpeningElectronic" type="number" min="0" step="0.01" placeholder="Enter opening POS balance"><div id="posOpeningElectronicHint" class="small openingCashHint" aria-live="polite"></div></div><div><label>Opening customer debt</label><input spellcheck="false" id="openingDebt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <div><label for="openingCash">Retail opening cash</label><input spellcheck="false" id="openingCash" type="number" min="0" step="0.01" placeholder="0.00"><div id="openingCashHint" class="small openingCashHint" aria-live="polite"></div></div><div><label for="posOpeningCash">POS opening cash</label><input spellcheck="false" id="posOpeningCash" type="number" min="0" step="0.01" placeholder="0.00"><div id="posOpeningCashHint" class="small openingCashHint" aria-live="polite"></div></div><div><label for="posOpeningElectronic">Opening POS electronic balance</label><input spellcheck="false" id="posOpeningElectronic" type="number" min="0" step="0.01" placeholder="0.00"><div id="posOpeningElectronicHint" class="small openingCashHint" aria-live="polite"></div></div><div><label for="openingDebt">Opening customer debt</label><input spellcheck="false" id="openingDebt" type="number" min="0" step="0.01" placeholder="0.00"></div>
         </div>
       <div class="finConfirmRow"><button class="primary finDayConfirmBtn" type="button" id="finDayConfirm">✓ Confirm Day Setup</button><span id="finDayConfirmStatus" class="small">Bank review reminder starts after confirmation</span></div>
       </div></div>
@@ -3509,16 +3530,16 @@ html{scrollbar-gutter:stable}
         <option value="purchase_cash">Stock purchase — cash</option><option value="purchase_transfer">Stock purchase — transfer</option><option value="purchase_credit">Stock Purchase on Credit</option>
         <option value="debt_cash">Old customer debt paid — cash</option><option value="debt_transfer">Old customer debt paid — transfer</option><option value="expense_cash">Expense — cash</option><option value="expense_bank">Expense — bank</option><option value="refund_cash">Refund — cash</option><option value="refund_bank">Refund — bank</option>
       </select></div>
-      <div class="productSearchWrap"><label>Reference / product</label><input spellcheck="false" id="note" placeholder="Start typing a product name…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="productSuggestions"><button type="button" id="clearProductSelection" class="iconbtn hidden" aria-label="Clear selected product" title="Clear selected product">×</button><datalist id="stockNames"></datalist><div id="productSuggestions" class="productSuggestDrop hidden" role="listbox"></div></div>
+      <div class="productSearchWrap"><label>Reference / product</label><input spellcheck="false" id="note" placeholder="Search products…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="productSuggestions"><button type="button" id="clearProductSelection" class="iconbtn hidden" aria-label="Clear selected product" title="Clear selected product">×</button><datalist id="stockNames"></datalist><div id="productSuggestions" class="productSuggestDrop hidden" role="listbox"></div></div>
       <div><label>Note / Person</label><input spellcheck="false" id="party" placeholder="Name or note (optional)"></div>
-      <div class="amt"><label>Unit amount</label><input spellcheck="false" id="amount" type="number" min="0" step="0.01" placeholder="0.00"></div><div class="amt"><label>Qty / loose units</label><input spellcheck="false" id="qty" type="number" min="0" step="1" placeholder="0"><div id="saleAvailable" class="rsAvailability hidden"></div><div id="saleStockWarn" class="rsWorkflowWarn" role="alert"></div></div><div class="amt saleTotalField"><label for="totalAmount">Total</label><input spellcheck="false" id="totalAmount" type="number" step="0.01" placeholder="0.00" readonly></div><button type="button" class="ghost" id="refreshSalePrice">Refresh current price</button><button class="ghost" id="holdBtn" data-action-role="cart-add">Add to Cart</button><button class="primary" id="addBtn">Add</button><button class="ghost hidden" id="cancelEditBtn">Cancel</button>
+      <div class="amt"><label>Unit amount</label><input spellcheck="false" id="amount" type="number" min="0" step="0.01" placeholder="0.00"></div><div class="amt"><label>Qty / loose units</label><input spellcheck="false" id="qty" type="number" min="0" step="1" placeholder="0"><div id="saleAvailable" class="rsAvailability hidden"></div><div id="saleStockWarn" class="rsWorkflowWarn" role="alert"></div></div><div class="amt saleTotalField"><label for="totalAmount">Total</label><input spellcheck="false" id="totalAmount" type="number" step="0.01" placeholder="0.00" readonly></div><button type="button" class="ghost" id="refreshSalePrice">Refresh price</button><button class="ghost" id="holdBtn" data-action-role="cart-add">Add to Cart</button><button class="primary" id="addBtn">Add</button><button class="ghost hidden" id="cancelEditBtn">Cancel</button>
     </div>
     <div id="txPackBox" class="legacyPackCompat hidden" aria-hidden="true"><input spellcheck="false" type="checkbox" id="txPackEnabled"><div id="txPackFields" class="hidden"></div><input spellcheck="false" id="txPacks" type="hidden" value="0"><input spellcheck="false" id="txUnitsPerPack" type="hidden" value="0"><input spellcheck="false" id="txPackTotal" type="hidden" value="0"><span id="txPackSummary"></span></div>
     <div id="paymentSourceBox" class="split hidden" style="margin-top:10px"><div><label>Payment Source</label><select id="paymentFunding"><option value="business">Business Balance</option><option value="external">External Payment Source</option></select></div><div id="paymentFundWrap"><label>Business fund</label><select id="paymentFund"><option value="cash">Cash</option><option value="bank">Account / Bank</option></select></div></div><div id="paymentSourceHelp" class="help hidden">External payments are recorded for accounting/debt settlement but do not reduce Roseachy-tracked cash or account balances.</div><div id="splitBox" class="split hidden"><div><label>Cash part</label><input spellcheck="false" id="splitCash" type="number" min="0" step="0.01" placeholder="0.00"></div><div><label>Transfer/POS part</label><input spellcheck="false" id="splitBank" type="number" min="0" step="0.01" placeholder="0.00"></div><div><label>Automatically owed</label><input spellcheck="false" id="splitCredit" type="number" min="0" step="0.01" placeholder="0.00" readonly><small>Unpaid amount enters Credit History</small></div></div>
     <div id="changeBox" class="hidden" style="background:var(--surface-secondary);border-radius:var(--rs-radius-md);padding:16px;margin-top:10px"><div class="small" style="font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Payment &amp; change</div><div class="split" style="margin-top:0"><div><label>Amount received from customer</label><input spellcheck="false" id="custPaid" type="number" min="0" step="0.01" placeholder="Leave blank if exact"></div><div><label>Returned to customer now</label><input spellcheck="false" id="custReturned" type="number" min="0" step="0.01" placeholder="0.00"></div><div><label>Still owed to customer</label><input spellcheck="false" id="custOwed" type="number" readonly placeholder="0.00"></div></div><div class="rsAutoDebtPreview" id="autoDebtPreview" aria-live="polite"></div><label class="checkline hidden" id="recoverChangeWrap"><input spellcheck="false" type="checkbox" id="recoverChangeCheck"> Excess change is recoverable from the customer</label><div class="small hidden" id="changeBoxNote" style="margin-top:8px;font-weight:600"></div></div>
     <div id="refundSourceWrap" class="hidden refundSource"><label>Original sale (recommended)</label><select id="refundSource"><option value="">Use current product pricing</option></select><div class="help" id="refundSourceHint"></div></div><label id="refundReturnLine" class="checkline hidden"><input spellcheck="false" type="checkbox" id="refundReturn"> Returned item is sellable and should go back into stock</label>
     <div class="help" id="typeHelp"></div><div class="help" id="productHint"></div><div class="qpApplied hidden" id="saleQpHint">Quantity price applied</div><div id="txDivWrap" class="hidden" style="max-width:240px;margin-top:8px"><label>Division (no stock product matched)</label><select id="txDiv"><option value="">Unassigned</option><option value="pharmacy">Pharmacy</option><option value="essentials">Essentials</option></select></div><div class="warnText" id="stockWarn"></div>
-    <div class="help">Stock adjustments (add, remove, damaged/spoiled) are done in the Stock tab.</div>
+    <div class="help">Use the Stock tab to adjust quantities or record damaged goods.</div>
     </div>
     <div id="posEntry" class="hidden">
       <div class="posBal" id="posBal"></div>
@@ -3542,7 +3563,7 @@ html{scrollbar-gutter:stable}
       <div class="summaryTop"><strong>Cart</strong><span class="small">Running total: <b id="holdTotal">0</b></span></div>
       <div id="holdList" style="margin-top:4px"></div>
       <div id="holdPaymentBox" class="hidden" style="background:var(--surface-secondary);border-radius:var(--rs-radius-md);padding:16px;margin-top:14px"><div class="small" style="font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Payment &amp; change for this basket</div><div class="split" style="margin-top:0"><div><label>Amount received from customer</label><input spellcheck="false" id="holdCustPaid" type="number" min="0" step="0.01" placeholder="Leave blank if exact"></div><div><label>Returned to customer now</label><input spellcheck="false" id="holdCustReturned" type="number" min="0" step="0.01" placeholder="0.00"></div><div><label>Still owed to customer</label><input spellcheck="false" id="holdCustOwed" type="number" readonly placeholder="0.00"></div></div><div class="rsAutoDebtPreview" id="holdAutoDebtPreview" aria-live="polite"></div><label class="checkline hidden" id="holdRecoverChangeWrap"><input spellcheck="false" type="checkbox" id="holdRecoverChangeCheck"> Excess change is recoverable from the customer</label><div class="small" style="margin-top:8px">Applies once, to the whole basket total above — not per item.</div></div>
-      <div class="help">Add to Cart adds the selected product immediately. Change the sales type above to update the entire cart. Complete Sale records the cart and its payment together.</div><div class="footerActions" style="margin-top:16px"><button class="ghost" id="editOpenCartBtn" type="button">Edit Cart</button><button class="ghost danger" id="cancelHoldBtn">Cancel Cart</button></div>
+      <div class="help">The sale type applies to the whole cart. Complete Sale records the items and payment together.</div><div class="footerActions" style="margin-top:16px"><button class="ghost" id="editOpenCartBtn" type="button">Edit Cart</button><button class="ghost danger" id="cancelHoldBtn">Cancel Cart</button></div>
     </div>
 
     <div class="collapse">
@@ -3621,7 +3642,7 @@ html{scrollbar-gutter:stable}
         <div id="txTrashList"></div>
         <div class="small" style="margin:28px 0 10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:10.5px">Data safety / backup</div>
         <div class="footerActions"><button class="ghost" id="backupBtn">Export Full Backup</button><button class="ghost" id="importBtn">Import Backup</button><input spellcheck="false" class="hidden" type="file" id="importFile" accept="application/json,.json"><button class="ghost" id="copyBackupBtn">Copy Backup JSON</button><button class="ghost hidden" id="restorePreImportBtn">Restore pre-import backup</button></div>
-        <div class="help">Full Backup includes stock, saved days, Market Desk, notes (including deleted notes), current draft, recycle bins and settings. The Stock tab’s Working-State Backup is for current inventory + current-day work and is not a replacement for a Full Backup.</div>
+        <div class="help">Full Backup includes inventory, saved days, Market Desk, notes, drafts, recycle bins and settings. Working Stock covers current inventory and today’s work.</div>
         <div class="help" id="lastBackupInfo"></div>
         <div class="help" id="storageStatus"></div>
         <div class="storagePerfWarn hidden" id="storagePerfWarn"></div>
@@ -3687,7 +3708,7 @@ Dettol 250ml | Essentials | 1800 | 2200 | 24u | |"></textarea>
       <button type="button" class="collapseHead noPrint" data-target="stockTransferBody" aria-expanded="false"><span>Stock backup</span><span class="chev">⌄</span></button>
       <div class="collapseBody" id="stockTransferBody"><div class="collapseInner">
         <div class="workingStockBlock">
-          <div class="summaryTop workingStockHead"><div><strong>Working Stock</strong><div class="small">Download or restore current inventory together with current-day working state and unfinished purchase information.</div></div></div>
+          <div class="summaryTop workingStockHead"><div><strong>Working Stock</strong><div class="small">Includes current inventory, today’s work and unfinished purchases.</div></div></div>
           <div class="footerActions workingStockActions"><button class="ghost" id="stockImportBtn" type="button">⬆ Restore Working Stock</button><button class="primary" id="stockExportJsonBtn" type="button">⬇ Download Working Stock</button><input spellcheck="false" class="hidden" type="file" id="stockImportFile" accept=".json,.pdf,application/json,application/pdf"></div>
         </div>
         <div class="warnText" id="stockImportWarn"></div>
@@ -3717,7 +3738,7 @@ Dettol 250ml | Essentials | 1800 | 2200 | 24u | |"></textarea>
 <div class="collapse">
       <button type="button" class="collapseHead noPrint" data-target="productHistoryBody" aria-expanded="false"><span>Product history</span><span class="chev">⌄</span></button>
       <div class="collapseBody" id="productHistoryBody"><div class="collapseInner">
-        <div class="productHistoryToolbar"><div class="productSearchWrap"><label for="historyProductSearch">Product</label><input spellcheck="false" id="historyProductSearch" placeholder="Start typing a product name…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false"><input spellcheck="false" id="historyProduct" type="hidden"><div id="historyProductSuggestions" class="productSuggestDrop hidden" role="listbox"></div></div><div class="productHistoryBackWrap"><button class="ghost" id="productHistoryBack" type="button">Back to inventory</button></div></div>
+        <div class="productHistoryToolbar"><div class="productSearchWrap"><label for="historyProductSearch">Product</label><input spellcheck="false" id="historyProductSearch" placeholder="Search products…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false"><input spellcheck="false" id="historyProduct" type="hidden"><div id="historyProductSuggestions" class="productSuggestDrop hidden" role="listbox"></div></div><div class="productHistoryBackWrap"><button class="ghost" id="productHistoryBack" type="button">Back to inventory</button></div></div>
         <div class="tablewrap productHistoryTableWrap"><table><thead><tr><th>Date</th><th>Movement</th><th class="num">Qty</th><th class="num">Amount</th><th>Reference</th></tr></thead><tbody id="productHistory"></tbody></table></div>
       </div></div>
     </div>
@@ -8888,7 +8909,7 @@ function installUI(){
  <div class="syncActions">${actionButton('syncSend','Send Updates','send',true)}${actionButton('syncReceive','Receive Updates','receive')}</div>
  <label id="syncRecipientField">Share with<select id="syncRecipient"></select></label>
  <button id="syncResumeImport" type="button" hidden>Resume update review</button><div id="syncRoutineReview"><div id="syncReview"></div></div>
- ${disclosure('syncAdvances','Market Advances','wallet',`<p id="syncCashAllocation" class="small"></p><p class="small">An advance moves business cash into purchasing funds. Purchases charged to it do not deduct Retail cash again. Goods awaiting receipt remain unavailable until recorded as received.</p><label>Advance amount<input spellcheck="false" id="syncAdvanceAmount" type="number" min="0" step=".01"></label><label>Reason / market worker<input spellcheck="false" id="syncAdvanceReason"></label><label>Device holding this market cash<select id="syncAdvanceCustodian"></select></label><button id="syncAdvanceCreate" type="button">Record cash advance</button><label>Funding for the next Market cash purchases<select id="syncAdvanceSelect"></select></label><label>Unspent amount returned<input spellcheck="false" id="syncAdvanceReturn" type="number" min="0" step=".01"></label><button id="syncAdvanceReturnSave" type="button">Return unspent advance</button>`)}
+ ${disclosure('syncAdvances','Market Advances','wallet',`<p id="syncCashAllocation" class="small"></p><p class="small">An advance moves business cash into purchasing funds. Purchases charged to it do not deduct Retail cash again. Goods awaiting receipt remain unavailable until recorded as received.</p><label>Advance amount<input spellcheck="false" id="syncAdvanceAmount" type="number" min="0" step=".01"></label><label>Reason / market worker<input spellcheck="false" id="syncAdvanceReason"></label><label>Device holding the cash<select id="syncAdvanceCustodian"></select></label><button id="syncAdvanceCreate" type="button">Record cash advance</button><label>Funding for upcoming cash purchases<select id="syncAdvanceSelect"></select></label><label>Unspent amount returned<input spellcheck="false" id="syncAdvanceReturn" type="number" min="0" step=".01"></label><button id="syncAdvanceReturnSave" type="button">Return unspent advance</button>`)}
  ${disclosure('syncStockReceipts','Stock Receipts','box',`<label><input spellcheck="false" type="checkbox" id="syncReceiveNow" checked> Purchased stock is physically received immediately</label><div id="syncReceipts"></div>`)}
  </section>
  <section id="syncPage1" data-page="New Device" role="tabpanel" aria-labelledby="syncTab1" hidden>
@@ -9253,21 +9274,44 @@ window.addEventListener('resize',q,{passive:true});if(document.fonts&&document.f
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init()})();</script>
 <script>(function(){
 
-function glint(btn){
-  if(!btn||btn.disabled)return;
-  btn.classList.remove('rsGlint');
-  void btn.offsetWidth;
-  btn.classList.add('rsGlint');
-  clearTimeout(btn._rsGlintTimer);
-  btn._rsGlintTimer=setTimeout(function(){btn.classList.remove('rsGlint')},520);
+// Use independent scale so navigation and menu positioning keep their transforms.
+const root=document.documentElement;
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+const presses=new WeakMap();
+function buttonFeedback(button){
+  if(!button||button.disabled||button.getAttribute('aria-disabled')==='true'||
+     reducedMotion.matches||root.matches('.rs-animations-off,.rs-reduce-motion'))return;
+  const style=getComputedStyle(root);
+  const speed=parseFloat(style.getPropertyValue('--rs-motion-mult'))||1;
+  if(!root.classList.contains('rs-no-squash')){
+    const depth=1-(parseFloat(style.getPropertyValue('--rs-press-scale'))||.975);
+    presses.get(button)?.cancel();
+    const press=button.animate([
+      {scale:'1'},
+      {scale:(1+depth*.65)+' '+(1-depth*2),offset:.24},
+      {scale:(1-depth*.32)+' '+(1+depth),offset:.58},
+      {scale:'1'}
+    ],{duration:Math.min(520,Math.max(110,340*speed)),easing:'ease-in-out'});
+    presses.set(button,press);
+  }
+  if(root.classList.contains('rs-no-button-glint'))return;
+  button.querySelector(':scope > .rsButtonSheen')?.remove();
+  const sheen=document.createElement('span');
+  sheen.className='rsButtonSheen';
+  sheen.setAttribute('aria-hidden','true');
+  button.append(sheen);
+  const sweep=sheen.animate([
+    {backgroundPosition:'100% 0',opacity:0},
+    {opacity:.84,offset:.25},
+    {backgroundPosition:'0% 0',opacity:0}
+  ],{duration:Math.min(680,Math.max(240,460*speed)),easing:'ease-out'});
+  sweep.onfinish=sweep.oncancel=()=>sheen.remove();
 }
-document.addEventListener('pointerdown',function(e){
-  var b=e.target.closest&&e.target.closest('button');
-  if(!b)return;
-  glint(b);
+document.addEventListener('pointerdown',event=>{
+  if(event.isPrimary&&event.button===0)buttonFeedback(event.target.closest?.('button'));
 },{passive:true});
-document.addEventListener('keydown',function(e){
-  if((e.key==='Enter'||e.key===' ')&&document.activeElement&&document.activeElement.tagName==='BUTTON')glint(document.activeElement);
+document.addEventListener('keydown',event=>{
+  if(!event.repeat&&(event.key==='Enter'||event.key===' '))buttonFeedback(event.target.closest?.('button'));
 });
 })();</script>
 <script>
@@ -9731,21 +9775,18 @@ document.addEventListener('keydown',function(e){
 <script id="roseachy-portable-safety-js">
 (function(){
  'use strict';
- var b=document.getElementById('rsPortableBackup'),t=document.getElementById('rsPortableText');
- if(b)b.addEventListener('click',function(){
-   var original=document.getElementById('backupBtn');
-   if(!original){t.textContent='Backup control unavailable. Do not record business transactions in this copy.';return;}
-   original.click();
- });
+ const banner=document.getElementById('rsPortableSafety');
  function check(){
    if(!window.RoseachyStore)return;
-   var s=RoseachyStore.status();
-   if(!s.loaded){t.textContent='Storage has not finished loading. Do not enter sales until Roseachy finishes opening. Export a Full Backup after every shift.';return;}
-   if(s.stale||s.lastError){t.textContent='⚠ Storage needs attention: '+(s.lastError||'another window changed records')+'. Stop editing and check Settings → Data safety.';return;}
-   if(s.mode==='localstorage')t.textContent='⚠ Reduced-capacity fallback storage is active. Back up immediately and use a stable website origin for business records.';
-   else t.textContent='Local IndexedDB active in this browser. Back up every shift; clearing browser data or moving this file may make records inaccessible.';
+   const s=RoseachyStore.status();
+   banner.dataset.level=s.stale||s.lastError||s.mode==='localstorage'?'warning':'normal';
+   if(!s.loaded)banner.textContent='Opening local records. Wait before entering sales.';
+   else if(s.stale||s.lastError)banner.textContent='Storage needs attention. '+(s.lastError||'Another window changed the records')+'. Stop editing and check Data Safety in Settings.';
+   else if(s.mode==='localstorage')banner.textContent='Limited storage. Back up now and use a stable site address for trading.';
+   else banner.textContent='Stored in this browser. Back up after each shift.';
  }
- document.addEventListener('DOMContentLoaded',function(){setTimeout(check,1200)});
+ check();
+ window.addEventListener('roseachy:ready',check);
  window.addEventListener('roseachy:external-change',check);
  window.addEventListener('roseachy:storage-error',check);
 })();
