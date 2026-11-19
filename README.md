@@ -1,8 +1,10 @@
-# Roseachy Desk 2.18.3
+# Roseachy Desk 2.18.4
 
 Open `index.html` in a browser to run the standalone application. The deployment ZIP contains the same HTML. A static HTTPS server can also serve it. Keep the existing browser profile and application location when upgrading so Roseachy can access its IndexedDB records. Export a Full Backup first. Install the upgrade on all participating devices before exchanging new files.
 
 Full Backup is available under **Settings → Data safety → External backup**. Button glint and press feedback follow the Effects and Motion settings.
+
+The workspace menu pulses for a pending daily bank review. On the Sales Desk it also signals outstanding supplier debt. Open the menu to see which desk needs attention. Reduced motion keeps the indicators steady.
 
 ## Daily use
 
@@ -12,7 +14,7 @@ Open **Smart Sync & Merge** in Settings or Market Desk. The header, buttons and 
 - **New Device** creates invitations and opens connection files. On each device, export and verify its own full backup in **Confirmation Details**. Exchange invitations and compare device codes. Approve the shared opening records on one device, choose **Save Connection File**, and open that file on the other device to review and confirm. Receive current updates before trading on a newly enrolled device.
 - **History** shows recorded exchanges, approvals and errors. Expand **Activity details & recovery** for the underlying activities and recovery exports.
 
-For Cloudflare Pages Direct Upload, use [the deployment ZIP](dist/Roseachy-Desk-2.18.3.zip). Its root contains the standalone HTML. Screenshots show the [updated mobile header](screenshots/mobile-header.png), [Sync on mobile](screenshots/mobile-sync.png), [New Device on tablet](screenshots/tablet-new-device.png), and [History on desktop](screenshots/desktop-history.png).
+For Cloudflare Pages Direct Upload, use [the deployment ZIP](dist/Roseachy-Desk-2.18.4.zip). Its root contains the standalone HTML. Screenshots show the [updated mobile header](screenshots/mobile-header.png), [Sync on mobile](screenshots/mobile-sync.png), [New Device on tablet](screenshots/tablet-new-device.png), and [History on desktop](screenshots/desktop-history.png).
 
 ## Recovery and confidentiality
 
