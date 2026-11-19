@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roseachy · Sales &amp; Financial Desk</title>
-<meta name="roseachy-version" content="2.18.1-smart-sync">
+<meta name="roseachy-version" content="2.18.2-smart-sync">
 <meta name="theme-color" content="#163E32">
 <meta name="application-name" content="Roseachy">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3301,6 +3301,17 @@ html{scrollbar-gutter:stable}
   /* ---------- navigation ---------- */
   #rsMainTabs>.tabBtn{gap:4px;padding:6px 2px!important}
   .navLabel{font-size:12.5px;line-height:16px;font-weight:600}
+  @media(max-width:440px){
+    #rsMainTabs {grid-template-columns:1fr 1fr minmax(60px,1.15fr) 1fr minmax(72px,1.35fr)!important;gap:2px!important}
+    #rsMainTabs .navLabel {font-size:.78125rem!important;letter-spacing:normal}
+    #settingsDesk .settingRow .segChoice,#previewTabs {
+      display:flex!important;flex-wrap:wrap!important;justify-content:flex-start;
+    }
+    #settingsDesk .settingRow .segChoice>button,#previewTabs>button {
+      flex:1 1 auto!important;width:auto!important;max-width:100%;
+      white-space:normal!important;height:auto!important;padding:8px 12px!important;
+    }
+  }
   .collapseHead svg,.collapseHead .chev,.collapseHead .caret{width:var(--m3-icon-md);height:var(--m3-icon-md)}
 
   /* ---------- cards & collapsible sections: one inset system ---------- */
@@ -3427,7 +3438,7 @@ html{scrollbar-gutter:stable}
   border-radius:var(--rs-radius-md);
   background:var(--surface-primary);
   color:var(--text-muted);
-  font:500 max(.8125rem,var(--m3-text-meta))/1.5 var(--rs-body-font,system-ui);
+  font:500 max(.8125rem,var(--m3-text-meta))/1.5 var(--rs-font-family,system-ui);
   overflow-wrap:anywhere;
 }
 #rsPortableSafety[data-level="warning"] {color:var(--text-primary);border-inline-start:3px solid var(--status-danger)}
@@ -3894,7 +3905,7 @@ Dettol 250ml | Essentials | 1800 | 2200 | 24u | |"></textarea>
         <div><span>Inventory turnover</span><b id="anaTurnover">—</b></div>
         <div><span>Stagnant stock value</span><b id="anaStagnant">—</b></div>
       </div>
-      <details class="rsAnaDetail"><summary>Inventory requiring attention</summary><div id="anaInventoryDetail" class="rsAnaDetailBody"></div></details>
+      <details class="rsAnaDetail"><summary>Stock alerts</summary><div id="anaInventoryDetail" class="rsAnaDetailBody"></div></details>
     </section>
     <section class="card rsAnaPanel">
       <div class="summaryTop"><strong>Important insights</strong><span class="small">Up to 5 · only when supported</span></div>
@@ -4129,9 +4140,9 @@ Dettol 250ml | Essentials | 1800 | 2200 | 24u | |"></textarea>
       <div class="settingBlock"><div class="settingBlockHead"><strong>External backup</strong></div>
         <div class="settingSub" id="safetyBackupStatus" role="status">Checking backup history…</div>
         <div class="footerActions" style="margin-top:10px"><button class="primary" id="safetyExportBtn" type="button">Export full backup</button><button class="ghost" id="safetyBackupCheckBtn" type="button">Check backup file</button><input spellcheck="false" type="file" id="safetyBackupCheckFile" class="hidden" accept="application/json,.json" aria-label="Choose Roseachy full backup to verify"></div>
-        <div class="settingSub" id="safetyFileStatus" aria-live="polite">A backup is only safe after you confirm that the file exists outside Chrome and keep another copy.</div>
+        <div class="settingSub" id="safetyFileStatus" aria-live="polite">Choose a saved backup file to check its contents.</div>
       </div>
-      <div class="advancedNote">Full backups include current-day work, inventory, Market Desk, reports history and encrypted Financial Desk records. Browser storage protection cannot prevent intentional site-data clearing or phone loss. Save a copy to another device or cloud storage.</div>
+      <div class="advancedNote">Full backups cover today’s work, inventory, Market Desk, reports and encrypted Financial Desk records. Clearing browser data or moving this file can make records inaccessible. Keep a verified copy on another device or in cloud storage.</div>
     </div></details>
 
     <details class="settingsGroup"><summary><span>Advanced</span><small>Safety &amp; reset</small></summary><div class="settingsBody">
@@ -9248,8 +9259,10 @@ refreshDivisionSelectStyles();
 <script>(function(){var SEL='.tabs,.seg,.marketViewTabs,.marketCalcTabs';
 function place(c,still){if(c.dataset.rsSwipeTracking==='true')return;var ind=c._ind,a=c.querySelector(':scope>button.active,:scope>.tabBtn.active');if(!ind)return;if(!a||!a.offsetWidth){ind.classList.remove('on');return}
 var isMarketView=c.classList.contains('marketViewTabs'),cr=c.getBoundingClientRect(),ar=a.getBoundingClientRect(),w=ar.width,h=ar.height,x=ar.left-cr.left+c.scrollLeft,y=ar.top-cr.top+c.scrollTop;
+// A press changes the painted size. Position the indicator against the resting button.
+if(a.offsetParent===c){w=a.offsetWidth;h=a.offsetHeight;x=a.offsetLeft;y=a.offsetTop}
 if(isMarketView){w=Math.max(30,Math.round(a.offsetWidth*.46));h=3;x=Math.round(a.offsetLeft+(a.offsetWidth-w)/2);y=Math.round(a.offsetTop+a.offsetHeight-5)}
-if(c.id==='rsMainTabs'){x-=c.clientLeft;y-=c.clientTop}x=Math.round(x*100)/100;y=Math.round(y*100)/100;w=Math.round(w*100)/100;h=Math.round(h*100)/100;var key=x+'|'+y+'|'+w+'|'+h;var moved=ind._rsKey&&ind._rsKey!==key;
+if(c.id==='rsMainTabs'&&a.offsetParent!==c){x-=c.clientLeft;y-=c.clientTop}x=Math.round(x*100)/100;y=Math.round(y*100)/100;w=Math.round(w*100)/100;h=Math.round(h*100)/100;var key=x+'|'+y+'|'+w+'|'+h;var moved=ind._rsKey&&ind._rsKey!==key;
 if(still)ind.classList.add('still');ind.style.width=w+'px';ind.style.height=h+'px';ind.style.transform='translate('+x+'px,'+y+'px)';ind.classList.add('on');ind._rsKey=key;if(still){void ind.offsetWidth;ind.classList.remove('still')}else if(moved&&c.id!=='rsMainTabs'){ind.classList.remove('rsTabGlint');void ind.offsetWidth;ind.classList.add('rsTabGlint');clearTimeout(ind._rsTabGlintTimer);ind._rsTabGlintTimer=setTimeout(function(){ind.classList.remove('rsTabGlint')},460)}}
 function setup(c){if(c._ind)return;var ind=document.createElement('span');ind.className='tabInd';ind.setAttribute('aria-hidden','true');c.appendChild(ind);c._ind=ind;c.classList.add('hasInd');
 var raf=0;function q(still){cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){place(c,still)})}
