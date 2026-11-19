@@ -34,6 +34,19 @@ def main(browser):
                   el.append(probe);const expected=getComputedStyle(probe).color;probe.remove();
                   const style=getComputedStyle(el);return style.backgroundColor===expected && style.backgroundImage==='none'
                 }""",arg=selector,timeout=3000)
+    p.get_by_role('tab',name='New Device').click()
+    p.locator('#syncConnect summary').click()
+    # Change just one appearance preference at a time and measure its rendered effect.
+    probes=[('#syncPanel','paddingLeft'),('#syncLabel','height'),('.syncHeader','paddingTop'),
+            ('#syncPage1 h3','marginBottom'),('#syncConnect summary','paddingTop'),
+            ('.syncPanel','borderRadius'),('.syncPanel','borderTopWidth'),('.syncPanel','boxShadow')]
+    for key,(selector,prop) in zip(GEOMETRY,probes):
+        metrics=[]
+        for n in [0,50,100]:
+            run(p,'f.appearance(arg)',{**dict.fromkeys(GEOMETRY,50),key:n})
+            metrics.append(p.locator(selector).first.evaluate('(el,k)=>getComputedStyle(el)[k]',prop))
+        assert len(set(metrics))==3,(key,metrics)
+    p.locator('#syncConnect summary').click()
     sizes=[]
     for level in [0,50,100]:
         run(p,'f.appearance(arg)',dict.fromkeys(GEOMETRY,level))

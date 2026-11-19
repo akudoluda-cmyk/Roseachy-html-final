@@ -14,7 +14,7 @@ The supplied standalone HTML is preserved in Git commit `49f88a5`. The upgraded 
 | Operational accounts | Cash, POS, customer debt and supplier positions use opening amounts and identified ledger transactions. Payments remain linked to customer or supplier records. Supplier-payment and accounting-record checks run before commit. Similar independently recorded payments with matching account, date, method and amount require receipt review. |
 | Conflicts | Replaying events in dependency order compares before and after values. Operators choose disputed values and explicitly verify absolute counts. Prior decisions travel in updates. Competing decisions return to review. The event log retains the underlying activity. |
 | Private records | The existing shareable-field allowlist excludes the local bank vault. The business’s designated bank verification authority and cash custody rules continue to apply. Connector membership gives every device access to normal sales, purchases, inventory and credit workflows. |
-| Operator workflow | The original exposed routine operations, pairing, recovery, confirmations and diagnostic history together. The four views now guide transfers, display receive and commit outcomes separately, and show the actual error on failure. Exchange history retains the latest 50 entries; the business event journal is separate. |
+| Operator workflow | The original exposed routine operations, pairing, recovery, confirmations and diagnostic history together. The Sync, New Device and History tabs guide transfers, display receive and commit outcomes separately, and show the actual error on failure. Exchange history retains the latest 50 entries; the business event journal is separate. |
 
 ## Executed checks
 
@@ -49,3 +49,11 @@ The existing 32 MiB file limit applies to the exchange. Recipient-specific expor
 Legacy signed activities retain their original contents. Batch identifiers omitted by the old exporter cannot be recovered from those exports alone. Full Backup and private bank recovery retain their existing application workflows.
 
 The deployment ZIP passed its archive integrity check and contained a byte-identical copy of the tested source. The extracted HTML started from a local static HTTP server with external requests blocked and saved a device-name change after Chromium’s network was disconnected. The managed browser blocked direct file-URL navigation, so double-click launch in that browser remains unverified.
+
+## 2.18.1 theme and workflow checks
+
+The Chromium appearance suite compared the rendered header and Send button with the active primary color for every built-in palette in light and dark mode. It measured each of the eight appearance controls independently at 0, 50 and 100. The three tabs fit at widths of 320, 390, 768 and 1280 pixels.
+
+The suite verified keyboard tab switching, preservation of advance form input on collapse, a cash advance of 30 with 10 returned, and a pending four-unit purchase received exactly once. It also verified that Receive Updates rejected a signed invitation and retained the error in History after reload. The appearance and business-control run reported no browser console or page errors during these interactions.
+
+The independent-device suite passed with the revised invitation, connection and update file controls. It includes a fresh business confirmation on receipt of the approved connection file. Run `python tests/sync_appearance.py` and `python tests/smart_sync.py` from the checkout.
