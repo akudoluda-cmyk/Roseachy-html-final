@@ -21,7 +21,9 @@ def open_desk(page, desk):
 
 def layout(page):
     assert page.locator('#rsPortableSafety button').count()==0
-    assert page.locator('#rsPortableSafety').inner_text()=='Stored in this browser. Back up after each shift.'
+    banner=page.locator('#rsPortableSafety')
+    assert banner.is_hidden() and banner.bounding_box() is None
+    assert banner.text_content()==''
     for width in [320,390,768,1280]:
         page.set_viewport_size({'width':width,'height':844})
         page.locator('#tabBtnTx').click()
